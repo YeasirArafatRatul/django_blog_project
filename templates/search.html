@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load new_template_tags %}
+
+
+{% block content %}
+<div style="display: flex; flex-direction: column; align-items: center; ">
+    <input id='search' class="form-control" placeholder="Search Name..." style="flex-basis: 40%;"/>
+    <div id='box'>
+    
+        {% for person in persons %}
+    
+      <li>{{ person.full_name }}</li>
+    
+        {% endfor %}
+    
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    const data = '{{ person_json }}'
+
+    const raw_data = JSON.parse(data.replace(/&quot;/g, '"'))
+    // console.log(raw_data)
+
+    const input = document.getElementById('search')
+    // console.log(input)
+
+    let filteredArray = []
+    input.addEventListener('keyup', (e)=>{
+        box.innerHTML = ''
+        filteredArray = raw_data.filter(person=>person['first_name'].includes(e.target.value))
+        console.log(filteredArray)
+        if (filteredArray.length > 0){
+            filteredArray.map(person=>{
+                box.innerHTML += `<b>${person['first_name']}</b></br>`
+            })
+        } else {
+            box.innerHTML = "<b> No Results Found...</b>"
+        }
+
+    })
+</script>
+{% endblock %}

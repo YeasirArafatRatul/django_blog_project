@@ -30,13 +30,21 @@ class PersonDetails(DetailView):
 
 
 
+import json
+
 class AllPersonsView(ListView):
     model = Person
-    template_name = 'persons.html'
+    template_name = 'search.html'
     context_object_name = 'persons'
 
     def __init__(self):
         print("I am View")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['person_json'] = json.dumps(list(Person.objects.values()))
+        return context
+
 
 
 from .forms import AddPersonForm
@@ -219,3 +227,14 @@ def delete_cookie(request):
     response = render(request,'cookies/update_cookies.html')
     response.delete_cookie('name')
     return response
+
+
+
+
+
+
+
+
+
+
+

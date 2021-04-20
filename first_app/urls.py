@@ -13,4 +13,5 @@ urlpatterns = [
     path('get-cookie/',views.get_cookie),
     path('update-cookie/',views.update_cookie),
     path('delete-cookie/', views.delete_cookie),
+    
     ]
