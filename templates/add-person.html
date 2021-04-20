@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" width= "initial-scale=1.0">
+    <title>Add Person</title>
+</head>
+<body>
+    <form action="#" method="POST">
+        <h4 class="login-title">Add Person</h4>
+        {% csrf_token %} {{ form.as_p }}
+        <div class="col-12">
+             <button class="register-button mt-0" type='submit'>Add Person</button>
+        </div>
+</form>
+</body>
+</html>
