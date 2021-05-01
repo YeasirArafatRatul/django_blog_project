@@ -13,5 +13,11 @@ urlpatterns = [
     path('get-cookie/',views.get_cookie),
     path('update-cookie/',views.update_cookie),
     path('delete-cookie/', views.delete_cookie),
-    
+
+
+    path('api/persons/function', views.person_api_view),
+    path('api/persons/', views.PersonAPIView.as_view(), name='persons_api'),
+    path('api/generic-persons/', views.GenericPersonAPIView.as_view(), name='generic_ersons_api')
+
+
     ]

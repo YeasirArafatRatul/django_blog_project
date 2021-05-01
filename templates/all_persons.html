@@ -1,9 +1,45 @@
+{% extends 'base.html' %}
 {% load new_template_tags %}
-
-{% for person in persons %}
+{% block content %}
+ 
+<!-- Looping Over 'persons' Queryeset -->
+{% for person in persons_page %}
 <a href="{% url 'person-detail-view' person.id %}">
     <h3>{{person.first_name  }} {{person.last_name  }}</h3>
 </a>
 <h4>Gender: {{ person.gender | custom_filter }}</h>
 <!-- <h4>{{person.email}}</h4> -->
 {% endfor %}
+
+<!-- Pagination Part -->
+{% if persons_page.has_other_pages %}
+  <nav aria-label="Page navigation conatiner"></nav>
+  <ul class="pagination justify-content-center">
+    {% if persons_page.has_previous %}
+    <li><a href="?page={{ persons_page.previous_page_number }}" class="page-link">&laquo; PREV </a></li>
+    {% endif %}
+    {% if persons_page.has_next %}
+    <li><a href="?page={{ persons_page.next_page_number }}" class="page-link"> NEXT &raquo;</a></li>
+   {% endif %}
+  </ul>
+  </nav>
+</div>
+{% endif %}
+
+
+
+<!-- {% if is_paginated %}
+  <nav aria-label="Page navigation conatiner"></nav>
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+   <a href="?page={{ page_obj.previous_page_number }}" class="page-link">&laquo; PREV </a>
+    {% endif %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="page-link"> NEXT &raquo;</a>
+    {% endif %}
+  </ul>
+  </nav>
+</div>
+{% endif %} -->
+
+{% endblock %}

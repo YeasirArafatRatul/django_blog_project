@@ -34,7 +34,8 @@ import json
 
 class AllPersonsView(ListView):
     model = Person
-    template_name = 'search.html'
+    template_name = 'all_persons.html'
+    paginate_by = 4
     context_object_name = 'persons'
 
     def __init__(self):
@@ -44,6 +45,29 @@ class AllPersonsView(ListView):
         context = super().get_context_data(**kwargs)
         context['person_json'] = json.dumps(list(Person.objects.values()))
         return context
+
+
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+
+def all_persons(request):
+    persons = Person.objects.all()
+    paginator = Paginator(persons, 4)  # 4 persons in each page
+    page = request.GET.get('page')
+    print('Page', page)
+    try:
+        persons_page = paginator.page(page)
+        print(persons_page)    
+        
+    except PageNotAnInteger:
+        # If person is not an integer deliver the first page
+        persons_page = paginator.page(1)
+        print('except', persons_page)
+
+    except EmptyPage:
+        # If persons is out of range deliver last page of results
+        persons_page = paginator.page(paginator.num_pages)
+    return render(request, 'all_persons.html',{'page': page,'persons_page': persons_page,})
+
 
 
 
@@ -235,6 +259,93 @@ def delete_cookie(request):
 
 
 
+
+from rest_framework.views import APIView
+from rest_framework import authentication, permissions
+from rest_framework.response import Response
+import json
+
+from .serializers import PersonSerializers
+class PersonAPIView(APIView):
+
+    # authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        """
+        Return a list of all users.
+        """
+        persons = Person.objects.all()
+        serializer = PersonSerializers(persons, many=True)
+        return Response(serializer.data)
+
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import generics
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+
+class GenericPersonAPIView(generics.ListAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+
+    authentication_classes = [ TokenAuthentication ]
+    permission_classes = [IsAuthenticated]
+
+
+
+from rest_framework.decorators import api_view
+
+
+@api_view(['GET'])
+def person_api_view(request):
+    
+    persons = Person.objects.all()
+    serializer = PersonSerializers(persons, many=True)
+    return Response(serializer.data)
+
+
+
+from rest_framework.authtoken.models import Token
+
+def create_token(request):
+    current_user = request
+    check_token = Token.objects.get(user=current_user)
+
+    if check_token == None:
+        print('inside condition',check_token)
+        token = Token.objects.create(user=request.user)
+        print(token)
+        return HttpResponse('Token Created')
+
+    print(check_token)
+    print(check_token.key)
+
+    return HttpResponse('A Token Is Already Available For This User')
+
+
+
+
+
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+
+class CustomAuthToken(ObtainAuthToken):
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token,created = Token.objects.get_or_create(user=user)
+        print('created', created)
+        return Response({
+            'token': token.key,
+            'user_id': user.pk,
+        })
+
+
+
+#signals.py
 
 
 

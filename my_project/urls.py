@@ -16,10 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from first_app.views import PersonDetails,some_data,function_view,AllPersonsView,AddPersonView, AddPersonViewTwo
-from first_app.views import user_form
+from first_app.views import user_form, all_persons
 
 from django.contrib.auth.views import LoginView, LogoutView
+from first_app import views
 
+
+from rest_framework.authtoken.views import obtain_auth_token 
 
 urlpatterns = [
 
@@ -30,7 +33,9 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
     path('person/<int:pk>/', PersonDetails.as_view(), name='person-detail-view'),
-    path('all-persons/', AllPersonsView.as_view(),name='all-persons'),
+    # path('all-persons/', AllPersonsView.as_view(),name='all-persons'),
+
+    path('func-all-persons/', all_persons,name='all-persons'),
     path('add-person/', AddPersonView.as_view(), name='add-person'),
         path('add-person-two/', AddPersonViewTwo.as_view(), name='add-person'),
 
@@ -40,5 +45,10 @@ urlpatterns = [
 
     path('user-form', user_form, name='user-form'),
 
+    path('create-token/', views.create_token,name='create_token'),
+
+    path('auth-token/', views.CustomAuthToken.as_view(),name='auth_token'),
+
+    path('gettoken/', obtain_auth_token, name='api_token_auth'),
 
 ]
