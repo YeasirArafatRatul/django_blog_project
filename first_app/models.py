@@ -57,7 +57,7 @@ class Person(models.Model):
 
 
 class PersonsProfile(models.Model):
-    user = models.OneToOneField(Person,on_delete=models.CASCADE)
+    user = models.OneToOneField(Person,on_delete=models.CASCADE, related_name='profile')
     bio = models.CharField(max_length=100,null=True,blank=True)
     phone_no = models.PositiveIntegerField(unique=True,null=True)
 
@@ -83,4 +83,16 @@ class Car(models.Model):
 
     def __str__(self):
         return self.name
+
+
+
+class Laptop(models.Model):
+    owner = models.ForeignKey(Person,related_name = 'laptops',on_delete=models.CASCADE)
+    name = models.CharField(max_length=30)
+    price = models.IntegerField(default=0)
+      
+    def __str__(self):
+        return self.name
+
+
 

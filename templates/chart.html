@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<div class="row mt-3 pt-3">
+
+    <div class="col-md-8">
+        <canvas id="myChart" width="400" height="300"></canvas>
+        <script>
+            var ctx = document.getElementById('myChart').getContext('2d');
+            
+            var myChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: [{% for gender in genders %} '{{ gender }}', {% endfor %}],
+
+            
+            datasets: [{
+                label: 'Total',
+                data: [{% for numbers in males_and_females %} '{{ numbers }}', {% endfor %}],
+
+                backgroundColor: [
+                
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 160, 64, 1)',
+                        'rgba(255, 208, 86, 1)',
+                        'rgba(75, 194, 192, 1)',
+                        'rgba(153, 110, 205, 1)',
+                ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 160, 64, 1)',
+                        'rgba(255, 208, 86, 1)',
+                        'rgba(75, 194, 192, 1)',
+                        'rgba(153, 110, 205, 1)',
+                    ],
+                        borderWidth: 2
+            }]
+            },
+            
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+            });
+        </script>
+    </div>
+</div>
+{% endblock %}

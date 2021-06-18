@@ -15,23 +15,35 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from first_app.views import PersonDetails,some_data,function_view,AllPersonsView,AddPersonView, AddPersonViewTwo
+
+from first_app.views import PersonDetails, chart,some_data,function_view,AllPersonsView,AddPersonView, AddPersonViewTwo, ChartView
 from first_app.views import user_form, all_persons
 
 from django.contrib.auth.views import LoginView, LogoutView
 from first_app import views
-
+from keyvalue.views import *
 
 from rest_framework.authtoken.views import obtain_auth_token 
+from keyvalue.tasks import time_to_live
+
+
+from first_app.admin import second_admin_site
 
 urlpatterns = [
 
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('accounts/',include('first_app.urls')),
+    path('person/',include('first_app.urls')),
+
+    path('api/', include('authentication.urls')),
     
 
     path('admin/', admin.site.urls),
+    path('second-admin-site/', second_admin_site.urls),
+
+
+    
+
     path('person/<int:pk>/', PersonDetails.as_view(), name='person-detail-view'),
     # path('all-persons/', AllPersonsView.as_view(),name='all-persons'),
 
@@ -51,4 +63,18 @@ urlpatterns = [
 
     path('gettoken/', obtain_auth_token, name='api_token_auth'),
 
+
+    path('chart', chart, name='chart'),
+
+
+
+#  URLs for KeyValue App
+    path('single-pair/<str:key>/', KeyValueRUDApiView.as_view(), name='single-pair'),
+    path('all-pairs/', allPairsAPI.as_view(), name='all-pairs'),
+    path('create-pair/', addPairView.as_view(), name='create-pair'), 
 ]
+# time_to_live()
+
+admin.site.site_header = "Customized Site Name"
+admin.site.site_title = "New Admin Panel"
+admin.site.index_title = "Welcome To Admin Panel"

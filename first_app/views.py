@@ -1,3 +1,4 @@
+import re
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
@@ -6,6 +7,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.dates import DayArchiveView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView, CreateView
+from rest_framework.routers import DefaultRouter
 
 from .models import Person, Car
 # Create your views here.
@@ -279,9 +281,9 @@ class PersonAPIView(APIView):
         serializer = PersonSerializers(persons, many=True)
         return Response(serializer.data)
 
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import BaseAuthentication, TokenAuthentication
 from rest_framework import generics
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 
 class GenericPersonAPIView(generics.ListAPIView):
     queryset = Person.objects.all()
@@ -349,3 +351,287 @@ class CustomAuthToken(ObtainAuthToken):
 
 
 
+# CRUD OPERATION
+from rest_framework.generics import ( 
+    ListAPIView,
+    CreateAPIView,
+    ListCreateAPIView,
+    RetrieveAPIView, 
+    UpdateAPIView, 
+    DestroyAPIView, 
+    RetrieveDestroyAPIView,
+    RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
+
+from .serializers import PersonSerializers 
+from authentication.api.customauth import CustomAuthetication
+# PARTIAL UPDATE
+
+
+class PersonCreateAPIView(CreateAPIView):
+    serializer_class = PersonSerializers
+    authentication_classes = [CustomAuthetication]
+    permission_classes = [IsAuthenticated]
+
+
+
+class PersonDetailAPIView(RetrieveAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+    authentication_classes = [CustomAuthetication]
+    permission_classes = [IsAuthenticated]
+
+
+
+
+class PersonUpdateAPIView(UpdateAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+
+
+
+class PersonDeleteAPIView(DestroyAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+
+
+class PersonRetriveUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+
+
+
+class PersonRetriveDeleteAPIView(RetrieveDestroyAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+
+
+class PersonRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+
+
+
+class PersonListCreateApiView(ListCreateAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+
+
+
+
+from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
+
+class PersonViewset(viewsets.ViewSet):
+    queryset = Person.objects.all()
+    permission_classes = [IsAuthenticated]
+
+
+    def list(self, request):
+        """
+        This will return list of objects.
+        """
+        serializer_class = PersonSerializers(self.queryset, many=True)
+        return Response(serializer_class.data)
+
+
+    def create(self, request):
+        """
+        This will create an endpoint for POST request.
+        """
+        serializer = PersonSerializers(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+       
+        return Response(serializer.data)
+
+
+    def retrieve(self, request, pk=None):
+        """
+        Returns a single object
+        """
+        person = get_object_or_404(self.queryset, pk=pk)
+        serializer_class = PersonSerializers(person)
+        return Response(serializer_class.data)
+
+
+    def update(self, request, pk):
+        person = Person.objects.get(pk=pk)
+        serializer = PersonSerializers(person, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+
+        return Response(serializer.data)
+
+    def partial_update(self, request,pk):
+        person = Person.objects.get(pk=pk)
+        serializer = PersonSerializers(person, data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+        return Response(serializer.data)
+
+    def destroy(self, request,pk):
+        person = Person.objects.get(pk=pk)
+        person.delete()
+
+
+
+
+from rest_framework.viewsets import ModelViewSet
+from .serializers import *
+from .models import *
+
+class PersonModelViewSet(ModelViewSet):
+    serializer_class = PersonSerializers
+    queryset = Person.objects.all()
+
+    # serializer_class = PersonSerializers
+
+
+
+class NestedSerializerViewSet(viewsets.ModelViewSet):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializers
+
+
+
+
+class CarsNestedSerializerViewSet(viewsets.ModelViewSet):
+    serializer_class = CarSerializer
+    queryset = Car.objects.all()
+
+
+    def create(self, request, *args,**kwargs):
+        data = request.data
+        print(data)
+        new_car = Car.objects.create(name = data['name'],price=data['price'])
+        new_car.save()
+
+        # data['owner'] & is a dicationary owner is a nested dictionary
+        for owner in data['owner']:
+            print(type(owner))
+            print(owner)
+            car_owner = Person.objects.get(id=owner['id'])
+            new_car.owner.add(car_owner)
+
+        serializer = CarSerializer(new_car)
+
+        return Response(serializer.data)
+
+
+
+from .serializers import OneToOnePersonSeializer
+
+class PersonProfileViewSet(viewsets.ModelViewSet):
+    serializer_class = OneToOnePersonSeializer
+    queryset = PersonsProfile.objects.all()
+
+
+from rest_framework import status
+
+class AddPersonView(APIView):
+
+    def get(self, request, format=None):
+        person = Person.objects.all()
+        serializer = PersonSerializers(person, many = True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = PersonSerializers(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# THIRD PARTY API
+
+import requests
+import json
+from requests.exceptions import ConnectionError
+
+def thrid_party_api_view(request):
+    api_request = requests.get("https://jsonplaceholder.typicode.com/posts")
+    print(api_request)
+
+    try: 
+        posts = json.loads(api_request.content)[:5]
+        print(posts)
+    except:
+        posts = 'Not found'
+
+    return render(request, 'third_party_api.html', {'posts':posts})
+
+
+
+def third_party_post_api(request):
+    if request.method == 'POST':
+        form = AddPersonForm(request.POST)
+        data = form.data
+        print(data)
+        url = 'http://127.0.0.1/api/add-person'
+        api = requests.post(url=url,data=data)
+        print(api)
+
+        try:
+            response = json.loads(api.text)
+            # print(response)
+        except ConnectionError as e:
+            # print(e)
+            response = None
+    else:
+        form = AddPersonForm()
+    
+    return render(request, 'add-person.html', {'form':form})
+
+
+from django.views.generic.base import View
+
+class ChartView(View):
+    # queryset = Person.objects.all()
+    # serializer_class = PersonSerializers
+
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'chart.html', {})
+
+
+class ChartData(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, format=None):
+
+        data = {
+            "labels": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+            "data": [12, 19, 3, 5, 2, 3, 10],
+        }   
+
+        return Response(data)
+
+
+def chart(request):
+
+    males = Person.objects.filter(gender='Male').count()
+    females = Person.objects.filter(gender='Female').count()
+    males_and_females = [females, males]
+
+
+    labels  = Person.objects.values('gender').distinct()
+    
+    genders = []
+    for label in labels :
+        genders.append(label['gender'])
+
+
+    context = {
+        'genders':genders,
+        'males_and_females':males_and_females,
+
+
+    }
+    return render(request, 'chart.html', context)
